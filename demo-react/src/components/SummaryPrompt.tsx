@@ -4,7 +4,7 @@ import { PromptGenerator } from '../utils/PromptGenerator';
 import Modal from '../shared/ui/Modal';
 
 function SummaryPrompt() {
-    const [selectedDate, setSelectedDate] = useState('2025-05-02');
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
     const [prompt, setPrompt] = useState(masterPrompt);
     const [isGenerating, setIsGenerating] = useState(false);
