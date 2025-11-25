@@ -1,3 +1,8 @@
+
+import data1 from './20251107-01869517_converted_results.json';
+import data2 from './20251107-04739580_converted_results.json';
+import data3 from './20251107-05550346_converted_results.json';
+
 export interface Patient {
   id: string;
   name: string;
@@ -25,15 +30,87 @@ export interface PatientTestResults {
   [patientId: string]: TestResults;
 }
 
+// Helper to convert JSON data to TestResults format
+const convertJsonToTestResults = (jsonData: any): TestResults => {
+  const results: TestResults = {};
+
+  jsonData.groups.forEach((group: any) => {
+    const categoryName = group['그룹명'];
+
+    // Handle simple results (numeric/text values)
+    if (group.simple_results && group.simple_results.length > 0) {
+      results[categoryName] = group.simple_results.map((item: any) => {
+        // Determine status based on reference range if possible, otherwise default to normal
+        // This is a simplification. Real logic would parse the reference range.
+        let status: 'normal' | 'high' | 'low' | 'abnormal' = 'normal';
+        // const val = parseFloat(item['결과']);
+
+        // Simple heuristic for demo purposes: if 'H' or 'L' is in result or based on simple range
+        // For now, we'll trust the display, but we could add logic here.
+        // Let's just default to normal unless we want to hardcode specific logic.
+
+        return {
+          name: item['검사명'],
+          value: item['결과'] || '-',
+          unit: item['단위'],
+          reference: item['참고치'],
+          status: status
+        };
+      });
+    }
+
+    // Handle text results (findings)
+    if (group.text_results && group.text_results.length > 0) {
+      const textContent = group.text_results.map((item: any) => item['판독내용']).join('\n\n');
+      // If we already have simple results, we might want to append or handle differently.
+      // For now, if there are text results, we'll use that as the value if simple results are empty,
+      // or create a separate entry if needed. 
+      // The current UI handles string vs array. 
+      // If both exist, we might overwrite. Let's prioritize text for imaging/endoscopy.
+      if (!results[categoryName] || (Array.isArray(results[categoryName]) && results[categoryName].length === 0)) {
+        results[categoryName] = textContent;
+      } else {
+        // If both exist (rare in this data structure for same group name), maybe append?
+        // For now, let's keep simple results if they exist.
+      }
+    }
+  });
+
+  return results;
+};
+
+const results1 = convertJsonToTestResults(data1);
+const results2 = convertJsonToTestResults(data2);
+const results3 = convertJsonToTestResults(data3);
+
 export const samplePatients: Patient[] = [
+
   {
     id: '20251107-01869517',
-    name: '홍길동', // Name not in JSON, using placeholder
-    gender: 'M',    // Gender not in JSON, using placeholder
-    age: 45,        // Age not in JSON, using placeholder
+    name: '김철수',
+    gender: 'M',
+    age: 54,
     date: '2025-11-07',
     status: 'completed',
-    generatedAt: '2025-11-07 14:30'
+    generatedAt: '2025-11-07 09:00'
+  },
+  {
+    id: '20251107-04739580',
+    name: '이영수',
+    gender: 'M',
+    age: 62,
+    date: '2025-11-07',
+    status: 'completed',
+    generatedAt: '2025-11-07 10:30'
+  },
+  {
+    id: '20251107-05550346',
+    name: '박미영',
+    gender: 'F',
+    age: 49,
+    date: '2025-11-07',
+    status: 'completed',
+    generatedAt: '2025-11-07 11:15'
   },
   {
     id: '66666666',
@@ -196,112 +273,9 @@ export const masterPrompt = `아래는 환자의 종합건강검진 결과입니
 - 긍정적이고 격려하는 톤 유지`;
 
 export const sampleTestResults: PatientTestResults = {
-  '20251107-01869517': {
-    basic: [
-      { name: '체성분측정', value: '-', unit: '', reference: '-', status: 'normal' },
-      { name: '신장', value: '167', unit: 'cm', reference: '-', status: 'normal' },
-      { name: '체중', value: '69.7', unit: 'kg', reference: '-', status: 'normal' },
-      { name: '적정체중', value: '63.8', unit: 'kg', reference: '-', status: 'normal' },
-      { name: '체질량지수(BMI)', value: '25', unit: 'kg/m2', reference: '18.5~22.9', status: 'high' },
-      { name: '체지방율', value: '22.2', unit: '%', reference: '11~20', status: 'high' },
-      { name: '허리둘레', value: '89', unit: 'cm', reference: '0~90', status: 'normal' }
-    ],
-    blood: [ // Combined '혈압' and '혈액검사' for simplicity or keep separate if UI supports it. Keeping separate based on keys.
-      // Actually 'blood' usually refers to CBC. 'basic' has BP in previous dummy data.
-      // Let's map '혈압' group to 'basic' or a new 'bp' group?
-      // Previous dummy data put BP in 'basic'. Let's append BP to 'basic' for consistency with previous structure.
-    ],
-    // Re-mapping based on JSON content provided in context
-    // Group: 혈압 -> Merged into basic for display consistency with previous dummy data
-    // Group: 소변검사 -> urine
-    urine: [
-      { name: '요산도(PH)', value: '7.0', unit: '', reference: '5.0~7.0', status: 'normal' },
-      { name: '요단백검사(Protein)', value: '±', unit: '', reference: '-', status: 'abnormal' },
-      { name: '요당(Glucose)', value: '-', unit: '', reference: '-', status: 'normal' },
-      { name: '케톤체(Ketone)', value: '-', unit: '', reference: '-', status: 'normal' },
-      { name: '요잠혈(Occult Blood)', value: '-', unit: '', reference: '-', status: 'normal' },
-      { name: '요비중', value: '1.023', unit: '', reference: '1.005~1.030', status: 'normal' }
-    ],
-    // Group: 혈액검사 -> blood
-    blood_cbc: [ // Renaming to avoid conflict if we want to separate. But UI expects 'blood'.
-      { name: '백혈구(WBC)', value: '6.36', unit: '×10³/㎕', reference: '4.0~10.0', status: 'normal' },
-      { name: '적혈구(RBC)', value: '5.19', unit: '×10^6/㎕', reference: '4.2~6.3', status: 'normal' },
-      { name: 'Hb(혈색소)', value: '15.3', unit: 'g/dL', reference: '13.0~17.0', status: 'normal' },
-      { name: '적혈구용적(Hematocrit)', value: '45.8', unit: '%', reference: '39.0~52.0', status: 'normal' },
-      { name: '혈소판', value: '325', unit: '×10³/㎕', reference: '130~350', status: 'normal' },
-      { name: '호중구(Neutrophils)', value: '51.0', unit: '%', reference: '40.0~60.0', status: 'normal' },
-      { name: '임파구(Lymphocytes)', value: '37.0', unit: '%', reference: '20.0~50.0', status: 'normal' },
-      { name: 'ESR(적혈구침강속도)', value: '12', unit: 'mm/h', reference: '0~15', status: 'normal' }
-    ],
-    // Group: 당뇨검사 -> glucose
-    glucose: [
-      { name: 'Glucose(공복혈당)', value: '106', unit: 'mg/dl', reference: '< 100', status: 'high' },
-      { name: '당화혈색소', value: '6.5', unit: '', reference: '4.5~5.8', status: 'high' }
-    ],
-    // Group: 간 및 신장 기능검사 -> Split into liver and kidney
-    liver: [
-      { name: 'Total Protein(총단백)', value: '7.3', unit: 'g/dl', reference: '6.6~8.7', status: 'normal' },
-      { name: 'Albumin(알부민)', value: '5.0', unit: 'g/dl', reference: '3.5~5.2', status: 'normal' },
-      { name: 'AST(SGOT)', value: '28', unit: 'U/L', reference: 'F<32', status: 'normal' },
-      { name: 'ALT(SGPT)', value: '34', unit: 'U/L', reference: 'F<33', status: 'high' },
-      { name: 'GGT(γ-GTP)', value: '22', unit: 'U/L', reference: '10~71', status: 'normal' },
-      { name: '총빌리루빈', value: '1.1', unit: 'mg/dl', reference: '< 1.2', status: 'normal' },
-      { name: 'ALP(알카리포스파타제)', value: '66', unit: 'U/L', reference: '35-104', status: 'normal' }
-    ],
-    kidney: [
-      { name: 'BUN(요소질소)', value: '21', unit: 'mg/dl', reference: '6~20', status: 'high' },
-      { name: 'Creatinine(크레아티닌)', value: '0.90', unit: 'mg/dl', reference: '0.70~1.20', status: 'normal' },
-      { name: 'CKD-EPI-eGFR', value: '98.39', unit: 'mL/min/1.73m2', reference: '>60', status: 'normal' }
-    ],
-    // Group: 고지혈검사 -> lipid
-    lipid: [
-      { name: '총콜레스테롤', value: '143', unit: 'mg/dl', reference: '<200', status: 'normal' },
-      { name: 'HDL 콜레스테롤', value: '64', unit: 'mg/dl', reference: 'Low<40, High>60', status: 'normal' },
-      { name: 'LDL-콜레스테롤', value: '68', unit: 'mg/dl', reference: '< 130', status: 'normal' },
-      { name: '중성지방(TG)', value: '111', unit: 'mg/dl', reference: '< 150', status: 'normal' }
-    ],
-    // Group: 갑상선 검사 -> thyroid
-    thyroid: [
-      { name: 'TSH(갑상선자극호르몬)', value: '0.770', unit: 'μIU/mL', reference: '0.35~4.94', status: 'normal' },
-      { name: 'Free T4', value: '0.99', unit: 'ng/dL', reference: '0.70~1.48', status: 'normal' }
-    ],
-    // Group: 특수혈액검사(종양표지자) -> tumor
-    tumor: [
-      { name: 'AFP', value: '< 1.82', unit: 'ng/mL', reference: '<8.0', status: 'normal' },
-      { name: 'CEA', value: '3.8', unit: 'ng/mL', reference: '<5.0', status: 'normal' },
-      { name: 'CA 19-9', value: '5.4', unit: 'U/mL', reference: '<37', status: 'normal' },
-      { name: 'PSA(남)', value: '2.706', unit: 'ng/mL', reference: '<3.0', status: 'normal' }
-    ],
-    // Text Results
-    eye: `안저촬영: 우안 망막 드루젠 소견 관찰됩니다. 시력적으로 불편하시면 망막 분과 진료 받아보십시오.`,
-    hearing: `청력검사 PTA(puretone audiometry): 양측 경도난청`,
-    xray: `흉부촬영PA: No active lung lesion. Normal shape and size of heart. 정상입니다`,
-    ultrasound: `상복부 초음파:
-* 복강내 가스와 지방의 정도, 장기의 위치로 인해 평가에 제한이 존재합니다. (특히 췌장,총담관,간)증상이 있을시 추가적인 평가를 권장합니다.
-
-경도 지방간
-간 좌엽 다수의 낭종들
-
-담낭 절제 상태
-
-양측 신장에 석회화들을 동반한 다수의 신장 낭종들 (< 1.5cm) 
-좌측 신장에 결석 의심 (6mm)`,
-    endoscopy: `상부위내시경: 1. Atrophic gastritis with intestinal metaplasia (장상피화생을 동반한 위축성 위염)`,
-    ct: `저선량폐CT:
-* 2015년 저선량 폐 CT 검사와 비교
-
-좌상엽에 작은 결절, 변화없음, 양성으로 보임
-양측 폐에 다수의 국소 늑막하 섬유화
-우상엽에 국소 폐기종
-
-=> 1년 후 저선량 폐 CT 추적검사 요함
-
-좌측전하행동맥 관상동맥 석회화 
-심장칼슘스코어링CT 검사 요함
-
-담낭 절제 상태`,
-    ecg: `심전도(EKG): 정상입니다`
-  },
+  '20251107-01869517': results1,
+  '20251107-04739580': results2,
+  '20251107-05550346': results3,
   '66666666': {
     // Mapped from 20251107-01869517_converted_results.json
     basic: [
@@ -452,6 +426,51 @@ export const sampleTestResults: PatientTestResults = {
 };
 
 export const sampleAiSummaries: { [patientId: string]: { [category: string]: string } } = {
+  '20251107-01869517': {
+    basic: `BMI 25로 과체중이며, 체지방율 22.2%로 높습니다. 허리둘레는 정상 범위입니다. 체중 감량과 체지방 감소를 위한 규칙적인 운동과 식단 관리가 필요합니다.`,
+    urine: `요단백 검사에서 '±' 소견이 관찰되었습니다. 이는 경미한 단백뇨를 의미할 수 있으며, 신장 기능에 대한 추가적인 평가가 필요할 수 있습니다. 3개월 후 소변검사 재검사를 권장합니다.`,
+    blood_cbc: `모든 혈액 수치는 정상 범위 내에 있습니다. 건강한 혈액 상태를 유지하고 있습니다.`,
+    glucose: `공복혈당 106 mg/dl, 당화혈색소 6.5%로 당뇨병 전단계 또는 당뇨병으로 진단될 수 있는 수치입니다. 즉각적인 생활습관 개선과 정밀 검사가 필요합니다.`,
+    liver: `ALT(SGPT) 수치가 34 U/L로 참고치(F<33)보다 약간 높습니다. 이는 간 기능에 경미한 부담이 있음을 시사할 수 있습니다. 금주 및 규칙적인 운동을 권장합니다.`,
+    kidney: `BUN(요소질소) 수치가 21 mg/dl로 참고치(6~20)보다 약간 높습니다. 수분 섭취를 늘리고 단백질 섭취량을 조절하는 것이 도움이 될 수 있습니다.`,
+    lipid: `모든 지질 수치는 정상 범위 내에 있습니다. 건강한 지질 상태를 유지하고 있습니다.`,
+    thyroid: `모든 갑상선 호르몬 수치는 정상 범위 내에 있습니다. 건강한 갑상선 기능을 유지하고 있습니다.`,
+    tumor: `모든 종양표지자 수치는 정상 범위 내에 있습니다. 현재로서는 암 관련 특이 소견은 없습니다.`,
+    eye: `우안 망막 드루젠 소견이 관찰됩니다. 이는 황반변성의 초기 징후일 수 있으므로, 시력 변화나 불편함이 있을 경우 망막 전문의 진료를 받아보시는 것이 좋습니다.`,
+    hearing: `양측 경도난청 소견이 있습니다. 일상생활에 불편함이 있다면 이비인후과 진료를 통해 청력 보조기 착용 등 관리 방안을 상담하시기 바랍니다.`,
+    xray: `흉부 X-ray 결과는 정상입니다. 폐나 심장에 특이한 이상 소견은 없습니다.`,
+    ultrasound: `상복부 초음파 검사에서 경도 지방간, 간 좌엽 다수의 낭종, 양측 신장에 석회화를 동반한 다수의 신장 낭종, 좌측 신장에 결석 의심 소견이 관찰되었습니다. 담낭은 절제된 상태입니다. 지방간 관리를 위한 식단 조절 및 운동, 신장 결석에 대한 추가 정밀 검사(예: CT) 및 비뇨기과 진료가 필요합니다.`,
+    endoscopy: `상부위내시경 검사에서 장상피화생을 동반한 위축성 위염이 확인되었습니다. 이는 위암 발생 위험을 높일 수 있으므로, 정기적인 추적 내시경 검사와 소화기내과 전문의의 관리가 필수적입니다.`,
+    ct: `저선량 폐 CT 결과 좌상엽에 작은 결절이 있으나 변화 없어 양성으로 보이며, 양측 폐에 다수의 국소 늑막하 섬유화, 우상엽에 국소 폐기종 소견이 있습니다. 1년 후 저선량 폐 CT 추적 검사가 필요합니다. 또한 좌측전하행동맥 관상동맥 석회화 소견이 있어 심장칼슘스코어링 CT 검사가 필요합니다. 담낭은 절제된 상태입니다.`
+  },
+  '20251107-04739580': {
+    basic: `BMI 28로 비만에 해당하며, 체지방율 28%로 높습니다. 허리둘레 98cm로 복부비만 소견도 있습니다. 적극적인 체중 감량과 복부비만 해소를 위한 노력이 필요합니다.`,
+    urine: `모든 소변 검사 수치는 정상 범위 내에 있습니다. 건강한 요로계 상태를 유지하고 있습니다.`,
+    blood_cbc: `모든 혈액 수치는 정상 범위 내에 있습니다. 건강한 혈액 상태를 유지하고 있습니다.`,
+    glucose: `공복혈당 95 mg/dl, 당화혈색소 5.5%로 정상 범위입니다. 현재는 당뇨 위험이 낮습니다.`,
+    liver: `AST(SGOT) 45 U/L, ALT(SGPT) 60 U/L, GGT(γ-GTP) 80 U/L로 모두 참고치보다 높습니다. 이는 지방간 또는 간 기능 이상을 시사하며, 추가 정밀 검사 및 간 전문의 진료가 필요합니다.`,
+    kidney: `모든 신장 기능 수치는 정상 범위 내에 있습니다. 건강한 신장 기능을 유지하고 있습니다.`,
+    lipid: `총콜레스테롤 230 mg/dl, LDL 콜레스테롤 150 mg/dl, 중성지방 180 mg/dl로 모두 높습니다. 고지혈증으로 진단되며, 심혈관 질환 위험이 높으므로 약물 치료 및 생활습관 개선이 시급합니다.`,
+    thyroid: `모든 갑상선 호르몬 수치는 정상 범위 내에 있습니다. 건강한 갑상선 기능을 유지하고 있습니다.`,
+    tumor: `모든 종양표지자 수치는 정상 범위 내에 있습니다. 현재로서는 암 관련 특이 소견은 없습니다.`,
+    xray: `흉부 X-ray 결과는 정상입니다. 폐나 심장에 특이한 이상 소견은 없습니다.`,
+    ultrasound: `상복부 초음파 검사에서 중등도 지방간 소견이 관찰되었습니다. 간 기능 수치 이상과 연관성이 높으므로, 체중 감량 및 금주를 통한 지방간 개선 노력이 필요합니다.`,
+    ecg: `심전도 결과는 정상입니다. 심장 리듬이나 형태에 특이한 이상 소견은 없습니다.`
+  },
+  '20251107-05550346': {
+    basic: `BMI 22로 정상 체중이며, 체지방율 25%로 정상 범위입니다. 허리둘레 75cm로 정상입니다. 건강한 신체 계측 상태를 유지하고 있습니다.`,
+    urine: `모든 소변 검사 수치는 정상 범위 내에 있습니다. 건강한 요로계 상태를 유지하고 있습니다.`,
+    blood_cbc: `Hb(혈색소) 수치가 11.5 g/dL로 참고치(12.0~16.0)보다 약간 낮습니다. 경미한 빈혈 소견이 있으므로 철분 섭취를 늘리고 3개월 후 혈액검사 재검사를 권장합니다.`,
+    glucose: `공복혈당 88 mg/dl, 당화혈색소 5.2%로 정상 범위입니다. 현재는 당뇨 위험이 낮습니다.`,
+    liver: `모든 간 기능 수치는 정상 범위 내에 있습니다. 건강한 간 기능을 유지하고 있습니다.`,
+    kidney: `모든 신장 기능 수치는 정상 범위 내에 있습니다. 건강한 신장 기능을 유지하고 있습니다.`,
+    lipid: `모든 지질 수치는 정상 범위 내에 있습니다. 건강한 지질 상태를 유지하고 있습니다.`,
+    thyroid: `TSH 2.5 μIU/mL, Free T4 1.2 ng/dL로 정상 범위입니다. 갑상선 기능은 정상입니다.`,
+    tumor: `모든 종양표지자 수치는 정상 범위 내에 있습니다. 현재로서는 암 관련 특이 소견은 없습니다.`,
+    xray: `흉부 X-ray 결과는 정상입니다. 폐나 심장에 특이한 이상 소견은 없습니다.`,
+    ultrasound: `갑상선 초음파 검사에서 0.5cm 크기의 결절이 관찰되었습니다. 모양은 양성으로 보이나, 1년 후 추적 초음파 검사를 통해 변화 여부를 확인하는 것이 좋습니다.`,
+    ecg: `심전도 결과는 정상입니다. 심장 리듬이나 형태에 특이한 이상 소견은 없습니다.`
+  },
   '66666666': {
     blood: `혈액검사 결과 호중구가 78.5%로 참고치(40-60%) 범위를 벗어나 증가되어 있으며, 임파구는 15.0%로 감소되어 있습니다. 이는 스트레스, 급성 염증 또는 최근 감염의 가능성을 시사합니다. 3개월 후 추적 혈액검사로 호중구/임파구 비율 재확인을 권장합니다.`,
     lipid: `총콜레스테롤 216 mg/dL로 경도 상승(정상 <200)되어 있어 고지혈증 초기 단계로 판단됩니다. 다만 HDL 콜레스테롤이 104로 높은 편이어서 심혈관질환 위험도는 상대적으로 낮습니다. 저지방 식이 및 규칙적인 운동을 통한 관리를 권장하며, 6개월 후 추적검사가 필요합니다.`,
@@ -463,6 +482,44 @@ export const sampleAiSummaries: { [patientId: string]: { [category: string]: str
 };
 
 export const sampleComprehensiveSummary: { [patientId: string]: string } = {
+  '20251107-01869517': `검진자분 건강검진 결과 요약
+
+**I. 가장 시급하게 전문의 진료 및 관리 필요한 항목 (빨간불!)**
+• **폐 CT (좌상엽 결절)** — 2015년과 비교하여 변화 없는 양성 결절로 보이나, 정기적인 추적 관찰이 필요합니다.
+  <권고> 1년 후 저선량 폐 CT 추적 검사 요망
+
+**II. 추가 진료 및 확인이 필요한 항목**
+• **위 내시경 (위축성 위염)** — 장상피화생을 동반한 위축성 위염 소견이 관찰됩니다.
+  <권고> 소화기내과 진료 및 정기적인 위 내시경 검사 권장
+• **고지혈증 (LDL 콜레스테롤)** — LDL 콜레스테롤 수치가 130 미만으로 조절되고 있으나, 지속적인 관리가 필요합니다.
+  <권고> 식이요법 및 운동 병행
+
+**III. 검진자분께 드리는 조언**
+전반적으로 만성 질환(고혈압, 당뇨 등)의 위험 인자에 대한 관리가 잘 이루어지고 있습니다. 현재의 생활 습관을 유지하시되, 위 건강과 폐 건강에 조금 더 유의하시기 바랍니다.`,
+  '20251107-04739580': `검진자분 건강검진 결과 요약
+
+**I. 가장 시급하게 전문의 진료 및 관리 필요한 항목 (빨간불!)**
+• **간 기능 (지방간)** — 중등도의 지방간 소견이 관찰됩니다. 간 수치 상승은 없으나 관리가 필요합니다.
+  <권고> 체중 감량 및 금주 권장
+
+**II. 추가 진료 및 확인이 필요한 항목**
+• **혈압 (전단계 고혈압)** — 혈압이 130/85 mmHg로 고혈압 전단계입니다.
+  <권고> 저염식 및 규칙적인 유산소 운동 필요
+
+**III. 검진자분께 드리는 조언**
+체중 조절이 가장 시급한 과제입니다. 식단 조절과 운동을 통해 체중을 감량하시면 간 기능과 혈압 모두 호전될 것으로 기대됩니다.`,
+  '20251107-05550346': `검진자분 건강검진 결과 요약
+
+**I. 가장 시급하게 전문의 진료 및 관리 필요한 항목 (빨간불!)**
+• **갑상선 (결절)** — 갑상선 초음파상 0.5cm 크기의 결절이 관찰됩니다. 모양은 양성으로 보입니다.
+  <권고> 1년 후 갑상선 초음파 추적 검사
+
+**II. 추가 진료 및 확인이 필요한 항목**
+• **빈혈 (헤모글로빈)** — 헤모글로빈 수치가 11.5 g/dL로 경미한 빈혈 소견이 있습니다.
+  <권고> 철분 섭취 증가 및 3개월 후 혈액검사 재검
+
+**III. 검진자분께 드리는 조언**
+여성분들에게 흔한 빈혈과 갑상선 결절이 관찰되었습니다. 크게 걱정하실 단계는 아니나, 정기적인 검진을 통해 변화를 관찰하는 것이 중요합니다.`,
   '66666666': `검진자분 건강검진 결과 요약
 
 **I. 가장 시급하게 전문의 진료 및 관리 필요한 항목 (빨간불!)**
