@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>종합검진 AI 소견 생성 시스템 - 데모</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Noto+Sans KR', sans-serif;
+        }
+
+        .card-shadow {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-shadow:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            transition: all 0.3s ease;
+        }
+
+        .nav-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-processing {
+            background-color: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .status-completed {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .data-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .data-table th {
+            background-color: #F9FAFB;
+            font-weight: 600;
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 2px solid #E5E7EB;
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #F3F4F6;
+        }
+
+        .data-table tr:hover {
+            background-color: #F9FAFB;
+        }
+
+        .badge-out-of-range {
+            color: #DC2626;
+            font-weight: 600;
+        }
+
+        .demo-banner {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Demo Banner -->
+    <div class="demo-banner">
+        <i class="fas fa-flask mr-2"></i>데모 버전 - 실제 백엔드 연동 없이 동작합니다
+    </div>
+
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-hospital-alt text-3xl"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">한국대학병원</h1>
+                        <p class="text-sm opacity-90">종합검진 AI 소견 생성 시스템</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-sm opacity-90">관리자</p>
+                        <p class="font-semibold">김의사</p>
+                    </div>
+                    <button class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="container mx-auto px-6">
+            <div class="flex gap-2">
+                <button onclick="showPage('generation')" id="tab-generation" class="nav-tab nav-active px-6 py-4 font-semibold transition-all">
+                    <i class="fas fa-file-medical mr-2"></i>종합소견 생성
+                </button>
+                <button onclick="showPage('test-prompts')" id="tab-test-prompts" class="nav-tab px-6 py-4 font-semibold text-gray-600 hover:text-gray-900 transition-all">
+                    <i class="fas fa-flask mr-2"></i>검사별 프롬프트
+                </button>
+                <button onclick="showPage('summary-prompt')" id="tab-summary-prompt" class="nav-tab px-6 py-4 font-semibold text-gray-600 hover:text-gray-900 transition-all">
+                    <i class="fas fa-edit mr-2"></i>종합소견 프롬프트
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Page: 종합소견 생성 -->
+        <div id="page-generation" class="page-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Stats Cards -->
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm mb-1">전체 검진 대상자</p>
+                            <h3 class="text-3xl font-bold text-gray-800" id="stat-total">6</h3>
+                        </div>
+                        <div class="bg-blue-100 p-4 rounded-full">
+                            <i class="fas fa-users text-blue-600 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm mb-1">생성 완료</p>
+                            <h3 class="text-3xl font-bold text-green-600" id="stat-completed">3</h3>
+                        </div>
+                        <div class="bg-green-100 p-4 rounded-full">
+                            <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm mb-1">생성 대기중</p>
+                            <h3 class="text-3xl font-bold text-yellow-600" id="stat-pending">3</h3>
+                        </div>
+                        <div class="bg-yellow-100 p-4 rounded-full">
+                            <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">검진일 조회</label>
+                        <input type="date" id="filter-date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" value="2025-11-07">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">이름 검색</label>
+                        <input type="text" id="filter-name" placeholder="환자명 입력" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">소견 생성 여부</label>
+                        <select id="filter-status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option>전체</option>
+                            <option>생성 완료</option>
+                            <option>생성 대기</option>
+                            <option>생성 중</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button onclick="filterPatients()" class="btn-primary text-white px-6 py-2 rounded-lg font-semibold flex-1">
+                            <i class="fas fa-search mr-2"></i>조회
+                        </button>
+                        <button onclick="resetFilters()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-semibold transition">
+                            <i class="fas fa-redo mr-2"></i>초기화
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient List -->
+            <div class="bg-white rounded-xl card-shadow overflow-hidden">
+                <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-list mr-2 text-purple-600"></i>검진 대상자 목록
+                    </h2>
+                    <button onclick="batchGenerate()" class="btn-primary text-white px-6 py-2 rounded-lg font-semibold">
+                        <i class="fas fa-robot mr-2"></i>배치 자동 생성
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="data-table w-full" id="patientTable">
+                        <thead>
+                            <tr>
+                                <th class="w-12">
+                                    <input type="checkbox" class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500">
+                                </th>
+                                <th>등록번호</th>
+                                <th>성명</th>
+                                <th>성별/나이</th>
+                                <th>검진일</th>
+                                <th>소견 생성 상태</th>
+                                <th>생성 일시</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patient-list">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: 검사별 프롬프트 -->
+        <div id="page-test-prompts" class="page-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Panel: Test Selection -->
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-vials mr-2 text-purple-600"></i>검사 선택
+                    </h2>
+                    <div class="space-y-2" id="testList">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Middle Panel: Prompt Editor -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold text-gray-800">
+                                <i class="fas fa-edit mr-2 text-purple-600"></i><span id="selected-test-name">검사 분석 프롬프트</span>
+                            </h2>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4">사용자가 수정 가능한 프롬프트 영역</p>
+                        <textarea id="promptEditor" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm" placeholder="검사별 분석 프롬프트를 입력하세요..."></textarea>
+                        <div class="flex justify-end gap-2 mt-4">
+                            <button onclick="resetTestPrompt()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-semibold transition">
+                                <i class="fas fa-undo mr-2"></i>초기화
+                            </button>
+                            <button onclick="saveTestPrompt()" class="btn-primary text-white px-6 py-2 rounded-lg font-semibold">
+                                <i class="fas fa-save mr-2"></i>저장
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Test Section -->
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">테스트 실행</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">검진일</label>
+                                <input type="date" id="test-date" class="w-full px-4 py-2 border border-gray-300 rounded-lg" value="2025-11-07">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">환자 선택</label>
+                                <select id="test-patient" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option value="">환자를 선택하세요</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="runTestAnalysis()" class="btn-primary text-white px-6 py-2 rounded-lg font-semibold w-full">
+                            <i class="fas fa-robot mr-2"></i>AI 분석 실행
+                        </button>
+                    </div>
+
+                    <!-- AI Analysis Result -->
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">
+                            <i class="fas fa-brain mr-2 text-purple-600"></i>AI 분석 결과
+                        </h3>
+                        <div class="bg-gray-50 rounded-lg p-4 min-h-[200px]" id="test-analysis-result">
+                            <p class="text-gray-500 text-center py-8">AI 분석 결과가 여기에 표시됩니다</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: 종합소견 프롬프트 -->
+        <div id="page-summary-prompt" class="page-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Panel: Prompt Editor -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-file-alt mr-2 text-purple-600"></i>종합소견 생성 프롬프트
+                        </h2>
+                        <p class="text-sm text-gray-600 mb-4">마스터 프롬프트를 수정하세요</p>
+                        <textarea id="masterPromptEditor" rows="20" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm" placeholder="종합소견 생성 마스터 프롬프트..."></textarea>
+                        <div class="flex justify-end gap-2 mt-4">
+                            <button onclick="resetMasterPrompt()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-semibold transition">
+                                <i class="fas fa-undo mr-2"></i>초기화
+                            </button>
+                            <button onclick="saveMasterPrompt()" class="btn-primary text-white px-6 py-2 rounded-lg font-semibold">
+                                <i class="fas fa-save mr-2"></i>저장
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Test -->
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">테스트 실행</h3>
+                        <div class="mb-4">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">환자 선택</label>
+                            <select id="summary-patient" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                <option value="">환자를 선택하세요</option>
+                            </select>
+                        </div>
+                        <button onclick="generateSummary()" class="btn-primary text-white px-6 py-2 rounded-lg font-semibold w-full">
+                            <i class="fas fa-robot mr-2"></i>종합소견 생성
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">
+                            <i class="fas fa-eye mr-2 text-purple-600"></i>미리보기
+                        </h3>
+                        <div class="bg-gray-50 rounded-lg p-4 min-h-[400px] max-h-[600px] overflow-y-auto" id="summary-preview">
+                            <p class="text-gray-500 text-center py-8">종합소견 생성 결과가 여기에 표시됩니다</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: AI Processing -->
+    <div id="processingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">AI 분석 중...</h3>
+                <p class="text-gray-600 mb-4">약 5초 정도 소요될 수 있습니다.</p>
+                <div class="bg-gray-200 rounded-full h-2 mb-2">
+                    <div id="progressBar" class="gradient-bg h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p class="text-sm text-gray-500" id="progressText">0%</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Mock Data -->
+    <script src="data/patients.js"></script>
+    <script src="data/testResults.js"></script>
+    <script src="data/aiAnalysis.js"></script>
+
+    <!-- Main Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>

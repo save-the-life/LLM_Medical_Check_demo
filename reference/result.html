@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>종합건강검진 결과</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            body {
+                background: white;
+            }
+            
+            .page-break {
+                page-break-after: always;
+            }
+        }
+        
+        .medical-document {
+            background: white;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .result-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .patient-info-box {
+            border: 2px solid #E5E7EB;
+            background: #F9FAFB;
+        }
+        
+        .summary-section {
+            border-left: 4px solid #667eea;
+            background: #F0F4FF;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .test-result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .test-result-table th {
+            background: #F3F4F6;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #D1D5DB;
+        }
+        
+        .test-result-table td {
+            padding: 8px 10px;
+            border: 1px solid #E5E7EB;
+        }
+        
+        .out-of-range {
+            color: #DC2626;
+            font-weight: 600;
+        }
+        
+        .warning-box {
+            background: #FEF2F2;
+            border-left: 4px solid #EF4444;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .recommendation-box {
+            background: #ECFDF5;
+            border-left: 4px solid #10B981;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <!-- Print Controls -->
+    <div class="no-print mb-6 flex justify-between items-center max-w-5xl mx-auto">
+        <button onclick="window.history.back()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>목록으로
+        </button>
+        <div class="flex gap-3">
+            <button onclick="downloadPDF()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold">
+                <i class="fas fa-download mr-2"></i>PDF 다운로드
+            </button>
+            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold">
+                <i class="fas fa-print mr-2"></i>인쇄
+            </button>
+        </div>
+    </div>
+
+    <!-- Medical Document -->
+    <div class="medical-document max-w-5xl mx-auto mb-8">
+        <!-- Cover Page -->
+        <div class="page-break">
+            <div class="result-header">
+                <div class="flex items-center justify-center mb-4">
+                    <i class="fas fa-hospital text-5xl mr-4"></i>
+                    <div>
+                        <h1 class="text-4xl font-bold mb-2">한국대학병원</h1>
+                        <p class="text-lg">KOREA UNIVERSITY HOSPITAL</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-12 text-center">
+                <h2 class="text-5xl font-bold text-gray-800 mb-12 mt-20">종 합 건 강 검 진 결 과</h2>
+                
+                <div class="patient-info-box p-8 inline-block text-left mx-auto mt-20">
+                    <table class="text-lg">
+                        <tr>
+                            <td class="font-semibold pr-8 py-3">등 록 번 호</td>
+                            <td class="py-3">66666666</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold pr-8 py-3">검 사 일</td>
+                            <td class="py-3">2025/05/02</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold pr-8 py-3">성명(성별/나이)</td>
+                            <td class="py-3">테스트5 (F/45)</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold pr-8 py-3">주 민 등 록 번 호</td>
+                            <td class="py-3">******-2******</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Page -->
+        <div class="page-break p-12">
+            <div class="flex items-center mb-6">
+                <i class="fas fa-hospital text-3xl text-purple-600 mr-3"></i>
+                <h2 class="text-2xl font-bold">한국대학병원</h2>
+            </div>
+            
+            <div class="mb-8">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p><span class="font-semibold">등록번호:</span> 66666666</p>
+                        <p><span class="font-semibold">성명:</span> 테스트5 (F/45)</p>
+                    </div>
+                    <div class="text-right">
+                        <p><span class="font-semibold">건진일자:</span> 2025/05/02</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-section">
+                <h3 class="text-2xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-clipboard-check mr-3 text-purple-600"></i>종 합 소 견
+                </h3>
+                
+                <div class="space-y-6 text-gray-800 leading-relaxed">
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h4 class="font-bold text-lg mb-3 flex items-center">
+                            <i class="fas fa-chart-line mr-2 text-blue-600"></i>신체계측
+                        </h4>
+                        <ul class="space-y-2 ml-6">
+                            <li>• 체질량지수(BMI): <span class="out-of-range">24.9 (과체중)</span></li>
+                            <li>• 허리둘레: <span class="out-of-range">93cm</span></li>
+                            <li>• 혈압: 133/76</li>
+                        </ul>
+                        <p class="mt-4 text-gray-700">
+                            과체중이고 고혈압 전단계 소견입니다. 식이조절과 규칙적인 운동, 잦은 혈압측정을 하시고 
+                            지속적으로 혈압이 높을 경우 심장내과 진료받으시기 바랍니다.
+                        </p>
+                    </div>
+
+                    <div class="warning-box">
+                        <h4 class="font-bold text-lg mb-3 flex items-center">
+                            <i class="fas fa-exclamation-triangle mr-2 text-red-600"></i>주의 소견
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="font-semibold mb-2">유방촬영 검사:</p>
+                                <ul class="ml-6 space-y-1">
+                                    <li>• 치밀유방</li>
+                                    <li>• 우측 유방에 비대칭</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="font-semibold mb-2">유방 초음파:</p>
+                                <ul class="ml-6 space-y-1">
+                                    <li>• 우측 유방, 유륜하부 근처에 다수의 낭종들 (6mm)</li>
+                                    <li>• 유방촬영 검사에서 보인 병소에 해당하는 병변 의심</li>
+                                    <li>• 좌측 유방에 저에코성 결절 또는 낭종</li>
+                                    <li>• 양측 유방에 다수의 낭종들</li>
+                                </ul>
+                            </div>
+                            <p class="mt-4 text-red-700 font-semibold">
+                                치밀 유방이란 유방촬영상 전반적으로 하얗게 보이는 것이며 위 소견에 대해 
+                                조기 추적검사가 요구됩니다. <span class="underline">유방외과 진료를 받으시기 바랍니다.</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="recommendation-box">
+                        <h4 class="font-bold text-lg mb-3 flex items-center">
+                            <i class="fas fa-check-circle mr-2 text-green-600"></i>종합 판정 및 권고사항
+                        </h4>
+                        <ul class="space-y-2 ml-6">
+                            <li class="flex items-start">
+                                <i class="fas fa-circle text-xs mr-3 mt-2 text-red-600"></i>
+                                <span><strong>적극적인 혈압관리</strong>가 요구됩니다.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-circle text-xs mr-3 mt-2 text-red-600"></i>
+                                <span><strong>우측 유방 비대칭 및 유방병변 의심</strong> -- 유방외과 진료 권고합니다.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="border-t-2 border-gray-300 pt-6 mt-8">
+                        <div class="flex justify-between items-center">
+                            <p class="font-semibold">다음 건진일: 2026/05/02</p>
+                            <p class="font-semibold">판정의: ________________</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Results Page -->
+        <div class="page-break p-12">
+            <div class="flex items-center mb-6">
+                <i class="fas fa-hospital text-3xl text-purple-600 mr-3"></i>
+                <h2 class="text-2xl font-bold">한국대학병원</h2>
+            </div>
+            
+            <div class="mb-6">
+                <p><span class="font-semibold">등록번호:</span> 66666666 | <span class="font-semibold">성명:</span> 테스트5 (F/45) | <span class="font-semibold">건진일자:</span> 2025/05/02</p>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4 bg-gray-100 p-3 rounded">신체계측</h3>
+            <table class="test-result-table">
+                <thead>
+                    <tr>
+                        <th>검사 항목</th>
+                        <th>기준</th>
+                        <th>결과</th>
+                        <th>관련질환 및 참고사항</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>신장</td>
+                        <td>-</td>
+                        <td>175.8 cm</td>
+                        <td rowspan="3">
+                            저체중: BMI &lt; 18.5<br>
+                            정상체중: 18.5-22.9<br>
+                            과체중: ≥ 23.0
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>체중</td>
+                        <td>-</td>
+                        <td>77.1 kg</td>
+                    </tr>
+                    <tr>
+                        <td>체질량지수(BMI)</td>
+                        <td>18.5-22.9</td>
+                        <td class="out-of-range">24.9</td>
+                    </tr>
+                    <tr>
+                        <td>체지방율</td>
+                        <td>21-30%</td>
+                        <td class="out-of-range">37.1%</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>허리둘레</td>
+                        <td>0-85 cm</td>
+                        <td class="out-of-range">93 cm</td>
+                        <td>복부비만: 여 &gt; 80, 남 &gt; 90</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="text-xl font-bold mb-4 bg-gray-100 p-3 rounded mt-8">혈액검사</h3>
+            <table class="test-result-table">
+                <thead>
+                    <tr>
+                        <th>검사 항목</th>
+                        <th>기준</th>
+                        <th>결과</th>
+                        <th>관련질환 및 참고사항</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>백혈구(WBC)</td>
+                        <td>4.0-10.0 ×10³/㎕</td>
+                        <td>5.86</td>
+                        <td>감소시: 면역기능저하, 증가시: 세균감염의증</td>
+                    </tr>
+                    <tr>
+                        <td>적혈구(RBC)</td>
+                        <td>4.0-5.4 ×10⁶/㎕</td>
+                        <td>4.91</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Hb(혈색소)</td>
+                        <td>12.0-16.0 g/dL</td>
+                        <td>15.0</td>
+                        <td>감소시: 빈혈의증</td>
+                    </tr>
+                    <tr>
+                        <td>호중구(Neutrophils)</td>
+                        <td>40.0-60.0%</td>
+                        <td class="out-of-range">78.5%</td>
+                        <td>증가시: 스트레스, 급성출혈</td>
+                    </tr>
+                    <tr>
+                        <td>임파구(Lymphocytes)</td>
+                        <td>20.0-50.0%</td>
+                        <td class="out-of-range">15.0%</td>
+                        <td>증가시: 감염(박테리아, 바이러스)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="bg-blue-50 p-4 rounded-lg mt-6">
+                <h4 class="font-bold mb-2 flex items-center">
+                    <i class="fas fa-robot mr-2 text-blue-600"></i>AI 분석 소견
+                </h4>
+                <p class="text-gray-800 leading-relaxed">
+                    혈액검사 결과 호중구가 78.5%로 참고치(40-60%) 범위를 벗어나 증가되어 있으며, 
+                    임파구는 15.0%로 감소되어 있습니다. 이는 스트레스, 급성 염증 또는 최근 감염의 
+                    가능성을 시사합니다. 3개월 후 추적 혈액검사로 호중구/임파구 비율 재확인을 권장합니다.
+                </p>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4 bg-gray-100 p-3 rounded mt-8">고지혈검사</h3>
+            <table class="test-result-table">
+                <thead>
+                    <tr>
+                        <th>검사 항목</th>
+                        <th>기준</th>
+                        <th>결과</th>
+                        <th>관련질환 및 참고사항</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>총콜레스테롤</td>
+                        <td>&lt; 200 mg/dL</td>
+                        <td class="out-of-range">216 mg/dL</td>
+                        <td rowspan="4">증가시: 고지혈증, 지방간, 동맥경화의증</td>
+                    </tr>
+                    <tr>
+                        <td>HDL 콜레스테롤</td>
+                        <td>Low &lt; 40, High &gt; 60</td>
+                        <td class="out-of-range">104 mg/dL</td>
+                    </tr>
+                    <tr>
+                        <td>LDL 콜레스테롤</td>
+                        <td>&lt; 130 mg/dL</td>
+                        <td>120 mg/dL</td>
+                    </tr>
+                    <tr>
+                        <td>중성지방(TG)</td>
+                        <td>&lt; 150 mg/dL</td>
+                        <td>41 mg/dL</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="bg-blue-50 p-4 rounded-lg mt-6">
+                <h4 class="font-bold mb-2 flex items-center">
+                    <i class="fas fa-robot mr-2 text-blue-600"></i>AI 분석 소견
+                </h4>
+                <p class="text-gray-800 leading-relaxed">
+                    총콜레스테롤 216 mg/dL로 경도 상승(정상 &lt;200)되어 있어 고지혈증 초기 단계로 
+                    판단됩니다. 다만 HDL 콜레스테롤이 104로 높은 편이어서 심혈관질환 위험도는 상대적으로 
+                    낮습니다. 저지방 식이 및 규칙적인 운동을 통한 관리를 권장하며, 6개월 후 추적검사가 필요합니다.
+                </p>
+            </div>
+        </div>
+
+        <!-- Imaging Results Page -->
+        <div class="page-break p-12">
+            <div class="flex items-center mb-6">
+                <i class="fas fa-hospital text-3xl text-purple-600 mr-3"></i>
+                <h2 class="text-2xl font-bold">한국대학병원</h2>
+            </div>
+            
+            <div class="mb-6">
+                <p><span class="font-semibold">등록번호:</span> 66666666 | <span class="font-semibold">성명:</span> 테스트5 (F/45) | <span class="font-semibold">건진일자:</span> 2025/05/02</p>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4 bg-gray-100 p-3 rounded">초음파 검사</h3>
+            
+            <div class="border border-gray-300 rounded-lg p-6 mb-6">
+                <h4 class="font-bold text-lg mb-3">상복부 초음파 (2025/05/02)</h4>
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                    <p class="text-sm text-gray-700">
+                        * 복강내 가스와 지방의 정도, 장기의 위치로 인해 평가에 제한이 존재합니다. 
+                        (특히 췌장, 총담관, 간) 증상이 있을시 추가적인 평가를 권장합니다.
+                    </p>
+                </div>
+                <p class="text-gray-800 mb-4"><strong>소견:</strong> S/P cholecystectomy (담낭 절제 상태)</p>
+                
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h5 class="font-bold mb-2 flex items-center">
+                        <i class="fas fa-robot mr-2 text-blue-600"></i>AI 분석 소견
+                    </h5>
+                    <p class="text-gray-800 leading-relaxed">
+                        담낭 절제술 이후의 상태로 특이 소견은 관찰되지 않습니다. 
+                        다만 검사의 제한점을 고려하여 복부 불편감이나 소화기 증상이 있을 경우 
+                        추가 정밀검사를 받으시기 바랍니다.
+                    </p>
+                </div>
+            </div>
+
+            <div class="border border-gray-300 rounded-lg p-6">
+                <h4 class="font-bold text-lg mb-3">유방 초음파 (2025/05/02)</h4>
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                    <p class="text-sm text-gray-700">
+                        * 유방의 불균질에코로 인해 검사에 제한이 있으며 이로인해 숨겨진 병변이 있을 수 있습니다. 
+                        만져지는 병변, 유즙분비, 통증등의 이상이 있을시 전문의 진료를 권장합니다.
+                    </p>
+                </div>
+                
+                <div class="space-y-3 mb-4">
+                    <p class="text-gray-800">
+                        <strong>우측 유방:</strong> 유륜하부 근처에 다수의 낭종들 (6mm), 
+                        유방촬영 검사에서 보인 병소에 해당하는 병변 의심
+                    </p>
+                    <p class="text-gray-800">
+                        <strong>좌측 유방:</strong> 저에코성 결절 또는 낭종 (C3 - 양성추정소견)
+                    </p>
+                    <p class="text-gray-800">
+                        <strong>양측 유방:</strong> 다수의 낭종들 (C2 - 양성소견)
+                    </p>
+                    <p class="text-gray-800">
+                        이외 remaining both breasts에 focal lesion 없으며 both axillae에 이상 없음.
+                    </p>
+                </div>
+
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                    <p class="font-bold text-red-700 mb-2">판정: Category 3 (양성추정소견)</p>
+                    <p class="text-red-700">
+                        권고: 6개월~1년 후 초음파 추적검사 또는 이전 외부 검사와 비교 요함
+                    </p>
+                </div>
+                
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h5 class="font-bold mb-2 flex items-center">
+                        <i class="fas fa-robot mr-2 text-blue-600"></i>AI 분석 소견
+                    </h5>
+                    <p class="text-gray-800 leading-relaxed">
+                        우측 유방에서 관찰되는 낭종들과 유방촬영에서의 비대칭 소견은 
+                        양성 병변일 가능성이 높으나, 확진을 위해서는 유방외과 전문의 진료가 필요합니다. 
+                        Category 3 병변은 악성 가능성이 2% 미만이나, 조기 추적 관찰이 중요합니다. 
+                        <strong class="text-red-700">반드시 유방외과 진료를 받으시고, 
+                        6개월 후 추적 초음파 검사 일정을 잡으시기 바랍니다.</strong>
+                    </p>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4 bg-gray-100 p-3 rounded mt-8">유방촬영</h3>
+            
+            <div class="border border-gray-300 rounded-lg p-6">
+                <h4 class="font-bold text-lg mb-3">유방촬영 (2025/05/02)</h4>
+                
+                <div class="space-y-3 mb-4">
+                    <p class="text-gray-800">
+                        <strong>1. Breast Composition:</strong> c. The breasts are heterogeneously dense, 
+                        which may obscure small masses. (치밀 유방)
+                    </p>
+                    <p class="text-gray-800">
+                        <strong>2. Impression:</strong> A glandular asymmetry in right center (우측 유방에 비대칭)
+                    </p>
+                    <p class="text-gray-800">
+                        <strong>3. BIRADS category:</strong> 0 (need additional imaging evaluation &/or prior 
+                        mammograms for comparison)
+                    </p>
+                </div>
+
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                    <p class="font-bold text-red-700 mb-2">권고사항</p>
+                    <p class="text-red-700">
+                        비교평가하기 위하여 반드시 유방 초음파 판정과 비교 및 국소 압박촬영 추가검사 권함
+                    </p>
+                </div>
+                
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h5 class="font-bold mb-2 flex items-center">
+                        <i class="fas fa-robot mr-2 text-blue-600"></i>AI 분석 소견
+                    </h5>
+                    <p class="text-gray-800 leading-relaxed">
+                        치밀 유방은 한국 여성에서 흔하게 나타나는 소견으로, 유방촬영만으로는 
+                        병변 발견이 어려울 수 있어 초음파 검사가 필수적입니다. 
+                        우측 유방의 비대칭 소견은 초음파에서 확인된 낭종들과 연관이 있을 것으로 판단되나, 
+                        정확한 평가를 위해 추가 영상검사가 필요합니다. 
+                        <strong class="text-red-700">유방외과에서 국소 압박촬영과 전문의 판독을 받으시기 바랍니다.</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-8 bg-gray-50 text-center text-sm text-gray-600">
+            <p class="mb-2">본 검진 결과는 AI 분석 시스템을 통해 생성되었으며, 최종 판정은 전문의의 검토를 거쳤습니다.</p>
+            <p>문의사항이 있으시면 한국대학병원 건강증진센터로 연락 주시기 바랍니다.</p>
+            <p class="mt-4 font-semibold">한국대학병원 건강증진센터</p>
+            <p>서울시 종로구 대학로 123 | Tel: 02-1234-5678</p>
+        </div>
+    </div>
+
+    <script>
+        function downloadPDF() {
+            alert('PDF 다운로드 기능이 실행됩니다.\n실제 구현 시 서버에서 PDF를 생성하여 다운로드합니다.');
+            // 실제로는 서버 API를 호출하여 PDF 생성
+            // window.location.href = '/api/generate-pdf?patientId=66666666';
+        }
+    </script>
+</body>
+</html>

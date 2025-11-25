@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>종합건강검진 결과 - 데모</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+            }
+
+            .page-break {
+                page-break-after: always;
+            }
+        }
+
+        .medical-document {
+            background: white;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .patient-info-box {
+            border: 2px solid #E5E7EB;
+            background: #F9FAFB;
+        }
+
+        .summary-section {
+            border-left: 4px solid #667eea;
+            background: #F0F4FF;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .test-result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .test-result-table th {
+            background: #F3F4F6;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #D1D5DB;
+        }
+
+        .test-result-table td {
+            padding: 8px 10px;
+            border: 1px solid #E5E7EB;
+        }
+
+        .out-of-range {
+            color: #DC2626;
+            font-weight: 600;
+        }
+
+        .ai-box {
+            background: #EFF6FF;
+            border-left: 4px solid #3B82F6;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .demo-banner {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <!-- Demo Banner -->
+    <div class="no-print demo-banner">
+        <i class="fas fa-flask mr-2"></i>데모 버전 - Mock 데이터로 표시됩니다
+    </div>
+
+    <!-- Print Controls -->
+    <div class="no-print mb-6 flex justify-between items-center max-w-5xl mx-auto">
+        <button onclick="window.close()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>닫기
+        </button>
+        <div class="flex gap-3">
+            <button onclick="downloadPDF()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold">
+                <i class="fas fa-download mr-2"></i>PDF 다운로드
+            </button>
+            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold">
+                <i class="fas fa-print mr-2"></i>인쇄
+            </button>
+        </div>
+    </div>
+
+    <!-- Medical Document -->
+    <div class="medical-document max-w-5xl mx-auto mb-8">
+        <!-- Cover Page -->
+        <div class="page-break">
+            <div class="result-header">
+                <div class="flex items-center justify-center mb-4">
+                    <i class="fas fa-hospital text-5xl mr-4"></i>
+                    <div>
+                        <h1 class="text-4xl font-bold mb-2">한국대학병원</h1>
+                        <p class="text-lg">KOREA UNIVERSITY HOSPITAL</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-12 text-center">
+                <h2 class="text-5xl font-bold text-gray-800 mb-12 mt-20">종 합 건 강 검 진 결 과</h2>
+
+                <div class="patient-info-box p-8 inline-block text-left mx-auto mt-20" id="cover-patient-info">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Page -->
+        <div class="page-break p-12" id="summary-page">
+            <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Detailed Results Page -->
+        <div class="page-break p-12" id="details-page">
+            <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Footer -->
+        <div class="p-8 bg-gray-50 text-center text-sm text-gray-600">
+            <p class="mb-2">본 검진 결과는 AI 분석 시스템을 통해 생성되었으며, 최종 판정은 전문의의 검토를 거쳤습니다.</p>
+            <p>문의사항이 있으시면 한국대학병원 건강증진센터로 연락 주시기 바랍니다.</p>
+            <p class="mt-4 font-semibold">한국대학병원 건강증진센터</p>
+            <p>서울시 종로구 대학로 123 | Tel: 02-1234-5678</p>
+            <p class="mt-2 text-xs text-gray-500">데모 버전 - 실제 데이터가 아닙니다</p>
+        </div>
+    </div>
+
+    <!-- Load Mock Data -->
+    <script src="data/patients.js"></script>
+    <script src="data/testResults.js"></script>
+    <script src="data/aiAnalysis.js"></script>
+
+    <script>
+        // Get patient ID from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const patientId = urlParams.get('patientId');
+
+        if (!patientId) {
+            alert('환자 ID가 지정되지 않았습니다.');
+            window.close();
+        }
+
+        // Load patient data
+        const patient = getPatientById(patientId);
+        const testResults = getTestResults(patientId);
+        const aiAnalysis = getAIAnalysis(patientId);
+
+        if (!patient) {
+            alert('환자 정보를 찾을 수 없습니다.');
+            window.close();
+        }
+
+        // Render Cover Page
+        document.getElementById('cover-patient-info').innerHTML = `
+            <table class="text-lg">
+                <tr>
+                    <td class="font-semibold pr-8 py-3">등 록 번 호</td>
+                    <td class="py-3">${patient.id}</td>
+                </tr>
+                <tr>
+                    <td class="font-semibold pr-8 py-3">검 사 일</td>
+                    <td class="py-3">${patient.examDate}</td>
+                </tr>
+                <tr>
+                    <td class="font-semibold pr-8 py-3">성명(성별/나이)</td>
+                    <td class="py-3">${patient.name} (${patient.gender}/${patient.age})</td>
+                </tr>
+                <tr>
+                    <td class="font-semibold pr-8 py-3">생 년 월 일</td>
+                    <td class="py-3">${patient.birthDate}</td>
+                </tr>
+            </table>
+        `;
+
+        // Render Summary Page
+        if (aiAnalysis && aiAnalysis.comprehensive) {
+            document.getElementById('summary-page').innerHTML = `
+                <div class="flex items-center mb-6">
+                    <i class="fas fa-hospital text-3xl text-purple-600 mr-3"></i>
+                    <h2 class="text-2xl font-bold">한국대학병원</h2>
+                </div>
+
+                <div class="mb-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p><span class="font-semibold">등록번호:</span> ${patient.id}</p>
+                            <p><span class="font-semibold">성명:</span> ${patient.name} (${patient.gender}/${patient.age})</p>
+                        </div>
+                        <div class="text-right">
+                            <p><span class="font-semibold">건진일자:</span> ${patient.examDate}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-section">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center">
+                        <i class="fas fa-clipboard-check mr-3 text-purple-600"></i>AI 종 합 소 견
+                    </h3>
+
+                    <div class="bg-white p-6 rounded-lg shadow-sm whitespace-pre-wrap">
+                        ${aiAnalysis.comprehensive.summary}
+                    </div>
+
+                    <div class="border-t-2 border-gray-300 pt-6 mt-8">
+                        <div class="flex justify-between items-center">
+                            <p class="font-semibold">생성 일시: ${aiAnalysis.comprehensive.generatedAt}</p>
+                            <p class="font-semibold">판정의: ________________</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Detailed Results Page
+        if (testResults && testResults.groups) {
+            let detailsHTML = `
+                <div class="flex items-center mb-6">
+                    <i class="fas fa-hospital text-3xl text-purple-600 mr-3"></i>
+                    <h2 class="text-2xl font-bold">한국대학병원</h2>
+                </div>
+
+                <div class="mb-6">
+                    <p><span class="font-semibold">등록번호:</span> ${patient.id} | <span class="font-semibold">성명:</span> ${patient.name} (${patient.gender}/${patient.age}) | <span class="font-semibold">건진일자:</span> ${patient.examDate}</p>
+                </div>
+            `;
+
+            testResults.groups.forEach(group => {
+                detailsHTML += `
+                    <h3 class="text-xl font-bold mb-4 bg-gray-100 p-3 rounded mt-6">${group.groupName}</h3>
+                    <table class="test-result-table">
+                        <thead>
+                            <tr>
+                                <th>검사 항목</th>
+                                <th>결과</th>
+                                <th>단위</th>
+                                <th>참고치</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${group.results.map(result => `
+                                <tr>
+                                    <td>${result.name}</td>
+                                    <td class="${result.status !== 'normal' ? 'out-of-range' : ''}">${result.value}</td>
+                                    <td>${result.unit}</td>
+                                    <td>${result.reference}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                // Add AI analysis for this group if available
+                if (aiAnalysis && aiAnalysis.byGroup && aiAnalysis.byGroup[group.groupName]) {
+                    detailsHTML += `
+                        <div class="ai-box">
+                            <h4 class="font-bold mb-2 flex items-center">
+                                <i class="fas fa-robot mr-2 text-blue-600"></i>AI 분석 소견
+                            </h4>
+                            <p class="text-gray-800 leading-relaxed whitespace-pre-wrap">${aiAnalysis.byGroup[group.groupName]}</p>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('details-page').innerHTML = detailsHTML;
+        }
+
+        // PDF Download (Mock)
+        function downloadPDF() {
+            alert(`${patient.name} 환자의 검진 결과 PDF를 다운로드합니다.\\n(데모 버전에서는 실제 파일이 다운로드되지 않습니다)`);
+        }
+    </script>
+</body>
+</html>
