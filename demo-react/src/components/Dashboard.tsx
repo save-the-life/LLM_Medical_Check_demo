@@ -106,7 +106,7 @@ const Dashboard = ({ onSelectPatient }: DashboardProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">검진일 조회</label>
-                        <input type="date" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" defaultValue={new Date().toLocaleDateString('en-CA')} />
+                        <input type="date" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" defaultValue="2025-11-07" />
                     </div>
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">이름 검색</label>
