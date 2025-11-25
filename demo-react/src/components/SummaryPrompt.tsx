@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { samplePatients, sampleTestResults, masterPrompt, sampleComprehensiveSummary } from '../data/dummyData';
 import { PromptGenerator } from '../utils/PromptGenerator';
 import Modal from '../shared/ui/Modal';
+import ReportContent from './ReportContent';
 
 function SummaryPrompt() {
     const navigate = useNavigate();
@@ -12,6 +13,7 @@ function SummaryPrompt() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [summaryResult, setSummaryResult] = useState('');
     const [showFullPrompt, setShowFullPrompt] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
     const [filteredPatients, setFilteredPatients] = useState<typeof samplePatients>([]);
     const [savedPrompts, setSavedPrompts] = useState<{ name: string; content: string; timestamp: number }[]>([]);
 
@@ -385,12 +387,20 @@ function SummaryPrompt() {
                             <i className="fas fa-eye mr-2 text-purple-600"></i>검사 결과 AI 분석
                         </h3>
                         {summaryResult && (
-                            <button
-                                onClick={() => navigate(`/result/${selectedPatientId}`)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition flex items-center"
-                            >
-                                <i className="fas fa-external-link-alt mr-2"></i>상세보기 (리포트)
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setShowReportModal(true)}
+                                    className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition flex items-center"
+                                >
+                                    <i className="fas fa-window-maximize mr-2"></i>상세보기 (모달)
+                                </button>
+                                <button
+                                    onClick={() => navigate(`/result/${selectedPatientId}`)}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition flex items-center"
+                                >
+                                    <i className="fas fa-external-link-alt mr-2"></i>상세보기 (페이지)
+                                </button>
+                            </div>
                         )}
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4 flex-1 overflow-y-auto" id="summaryPreview">
@@ -419,6 +429,30 @@ function SummaryPrompt() {
                     </button>
                 </div>
             </Modal>
+
+            {/* Report Modal */}
+            {showReportModal && selectedPatientId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 print:p-0">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col print:h-auto print:w-full print:max-w-none print:rounded-none print:shadow-none">
+                        <div className="flex justify-between items-center p-4 border-b print:hidden">
+                            <h3 className="text-xl font-bold text-gray-800">종합건강검진 결과 리포트</h3>
+                            <button
+                                onClick={() => setShowReportModal(false)}
+                                className="text-gray-500 hover:text-gray-700 transition"
+                            >
+                                <i className="fas fa-times text-2xl"></i>
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto bg-gray-100 p-4 print:p-0 print:overflow-visible">
+                            <ReportContent
+                                patientId={selectedPatientId}
+                                isModal={true}
+                                onClose={() => setShowReportModal(false)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
