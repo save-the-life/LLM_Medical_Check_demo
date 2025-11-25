@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { samplePatients, sampleTestResults, masterPrompt, sampleComprehensiveSummary } from '../data/dummyData';
 import { PromptGenerator } from '../utils/PromptGenerator';
 import Modal from '../shared/ui/Modal';
+import ComprehensiveSummaryReport from './ComprehensiveSummaryReport';
 
 function SummaryPrompt() {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -129,40 +130,7 @@ function SummaryPrompt() {
 **III. 검진자분께 드리는 조언**
 전반적인 건강 상태는 양호합니다. 규칙적인 운동과 식습관 관리를 권장합니다.`;
 
-            // Convert Markdown to HTML for preview (Simple conversion)
-            const htmlContent = summary.split('\n').map((line: string) => {
-                let styledLine = line;
-
-                // Bold
-                styledLine = styledLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-                // Headers
-                if (line.includes('I. 가장 시급하게')) {
-                    return `<h4 class="text-lg font-bold text-red-600 mt-4 mb-2 border-b border-red-200 pb-1">${styledLine}</h4>`;
-                }
-                if (line.includes('II. 추가 진료')) {
-                    return `<h4 class="text-lg font-bold text-orange-600 mt-4 mb-2 border-b border-orange-200 pb-1">${styledLine}</h4>`;
-                }
-                if (line.includes('III. 검진자분께')) {
-                    return `<h4 class="text-lg font-bold text-green-600 mt-4 mb-2 border-b border-green-200 pb-1">${styledLine}</h4>`;
-                }
-
-                // Recommendation
-                if (line.trim().startsWith('<권고>')) {
-                    return `<div class="bg-gray-50 p-2 rounded ml-4 mb-2 text-sm text-gray-700 border-l-2 border-gray-400"><span class="font-bold mr-1">💡 권고:</span>${styledLine.replace('<권고>', '')}</div>`;
-                }
-
-                // Bullet points
-                if (line.trim().startsWith('•')) {
-                    return `<div class="pl-4 -indent-4 mb-1">${styledLine}</div>`;
-                }
-
-                if (line.trim() === '') return '<br>';
-
-                return `<p class="mb-1">${styledLine}</p>`;
-            }).join('');
-
-            setSummaryResult(`<div class="space-y-2 text-gray-800 leading-relaxed font-sans">${htmlContent}</div>`);
+            setSummaryResult(summary);
         }, 3000);
     };
 
@@ -378,7 +346,7 @@ function SummaryPrompt() {
                     </h3>
                     <div className="bg-gray-50 rounded-lg p-4 flex-1 overflow-y-auto" id="summaryPreview">
                         {summaryResult ? (
-                            <div dangerouslySetInnerHTML={{ __html: summaryResult }} />
+                            <ComprehensiveSummaryReport summary={summaryResult} />
                         ) : (
                             <p className="text-gray-500 text-center py-8 flex flex-col items-center">
                                 <i className="fas fa-clipboard-list text-4xl mb-3 opacity-20"></i>
