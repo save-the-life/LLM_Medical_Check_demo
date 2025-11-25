@@ -108,6 +108,46 @@ const convertJsonToTestResults = (jsonData: any): TestResults => {
 
 const results1 = convertJsonToTestResults(data1);
 const results2 = convertJsonToTestResults(data2);
+
+// Manually override statuses for abnormal values in results2 (Patient 20251107-04739580)
+// This is to ensure the demo shows "Abnormal" analysis without implementing a full reference range parser.
+if (results2['basic']) {
+  (results2['basic'] as TestResultItem[]).forEach(item => {
+    if (item.name.includes('체질량지수') || item.name.includes('체지방율') || item.name.includes('허리둘레')) item.status = 'high';
+  });
+}
+if (results2['blood_pressure']) {
+  (results2['blood_pressure'] as TestResultItem[]).forEach(item => {
+    if (item.name.includes('혈압')) item.status = 'high';
+  });
+}
+if (results2['glucose']) {
+  (results2['glucose'] as TestResultItem[]).forEach(item => {
+    if (item.name.includes('Glucose') || item.name.includes('당화혈색소')) item.status = 'high';
+  });
+}
+if (results2['lipid']) {
+  (results2['lipid'] as TestResultItem[]).forEach(item => {
+    if (item.name.includes('콜레스테롤') || item.name.includes('중성지방')) item.status = 'high';
+  });
+}
+if (results2['blood_chemistry']) {
+  (results2['blood_chemistry'] as TestResultItem[]).forEach(item => {
+    if (item.name.includes('AST') || item.name.includes('ALT') || item.name.includes('GGT') || item.name.includes('Creatinine')) item.status = 'high';
+    if (item.name.includes('eGFR')) item.status = 'low';
+  });
+}
+if (results2['urine']) {
+  (results2['urine'] as TestResultItem[]).forEach(item => {
+    if (item.name.includes('요단백') || item.name.includes('요당') || item.name.includes('요잠혈')) item.status = 'abnormal';
+  });
+}
+if (results2['blood']) {
+  (results2['blood'] as TestResultItem[]).forEach(item => {
+    if (item.name.includes('백혈구') && !item.name.includes('침전뇨')) item.status = 'high'; // WBC 12.5
+    if (item.name.includes('Hb')) item.status = 'low'; // Hb 10.5
+  });
+}
 const results3 = convertJsonToTestResults(data3);
 
 export const samplePatients: Patient[] = [

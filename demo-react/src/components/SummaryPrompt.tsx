@@ -77,7 +77,17 @@ function SummaryPrompt() {
                 if (typeof results === 'string') {
                     summaryText = results;
                 } else {
-                    summaryText = `${category} 검사 결과: ${results.length}개 항목 측정됨. (상세 분석 필요)`;
+                    if (Array.isArray(results)) {
+                        const abnormalItems = results.filter(r => r.status !== 'normal');
+                        if (abnormalItems.length > 0) {
+                            summaryText = `${category} 검사 결과: ${results.length}개 항목 중 ${abnormalItems.length}개 비정상.\n`;
+                            summaryText += abnormalItems.map(item => `- ${item.name}: ${item.value} ${item.unit} (${item.status})`).join('\n');
+                        } else {
+                            summaryText = `${category} 검사 결과: ${results.length}개 항목 측정됨. 특이 소견 없음.`;
+                        }
+                    } else {
+                        summaryText = results;
+                    }
                 }
                 return {
                     category: category,
