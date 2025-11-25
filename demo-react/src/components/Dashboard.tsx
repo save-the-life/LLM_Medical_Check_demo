@@ -10,6 +10,10 @@ const Dashboard = ({ onSelectPatient }: DashboardProps) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('전체');
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
     const filteredPatients = samplePatients.filter((patient: Patient) => {
         const matchesSearch = patient.name.includes(searchTerm) || patient.id.includes(searchTerm);
         const matchesStatus = statusFilter === '전체' ||
@@ -18,6 +22,28 @@ const Dashboard = ({ onSelectPatient }: DashboardProps) => {
             (statusFilter === '생성 중' && patient.status === 'processing');
         return matchesSearch && matchesStatus;
     });
+
+    // Calculate Pagination
+    const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentPatients = filteredPatients.slice(startIndex, startIndex + itemsPerPage);
+
+    const handlePageChange = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
+    // Reset pagination when filter changes
+    const handleSearch = (term: string) => {
+        setSearchTerm(term);
+        setCurrentPage(1);
+    };
+
+    const handleFilterChange = (status: string) => {
+        setStatusFilter(status);
+        setCurrentPage(1);
+    };
 
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -80,7 +106,7 @@ const Dashboard = ({ onSelectPatient }: DashboardProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">검진일 조회</label>
-                        <input type="date" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" defaultValue="2025-05-02" />
+                        <input type="date" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" defaultValue={new Date().toLocaleDateString('en-CA')} />
                     </div>
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">이름 검색</label>
@@ -89,7 +115,7 @@ const Dashboard = ({ onSelectPatient }: DashboardProps) => {
                             placeholder="환자명 입력"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => handleSearch(e.target.value)}
                         />
                     </div>
                     <div>
@@ -97,7 +123,7 @@ const Dashboard = ({ onSelectPatient }: DashboardProps) => {
                         <select
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                             value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
+                            onChange={(e) => handleFilterChange(e.target.value)}
                         >
                             <option>전체</option>
                             <option>생성 완료</option>
@@ -111,7 +137,7 @@ const Dashboard = ({ onSelectPatient }: DashboardProps) => {
                         </button>
                         <button
                             className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-semibold transition"
-                            onClick={() => { setSearchTerm(''); setStatusFilter('전체'); }}
+                            onClick={() => { handleSearch(''); handleFilterChange('전체'); }}
                         >
                             <i className="fas fa-redo mr-2"></i>초기화
                         </button>
@@ -146,7 +172,7 @@ const Dashboard = ({ onSelectPatient }: DashboardProps) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredPatients.map((patient) => (
+                            {currentPatients.map((patient) => (
                                 <tr
                                     key={patient.id}
                                     className="cursor-pointer hover:bg-purple-50 transition"
@@ -195,16 +221,36 @@ const Dashboard = ({ onSelectPatient }: DashboardProps) => {
                         </tbody>
                     </table>
                 </div>
+                {/* Pagination Controls */}
                 <div className="p-4 border-t border-gray-200 flex justify-between items-center">
-                    <p className="text-sm text-gray-600">총 <span className="font-semibold text-purple-600">{filteredPatients.length}</span>명</p>
+                    <p className="text-sm text-gray-600">
+                        총 <span className="font-semibold text-purple-600">{filteredPatients.length}</span>명 중{' '}
+                        <span className="font-semibold">{startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredPatients.length)}</span>명 표시
+                    </p>
                     <div className="flex gap-2">
-                        <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
+                        <button
+                            className={`px-3 py-1 border border-gray-300 rounded ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                        >
                             <i className="fas fa-chevron-left"></i>
                         </button>
-                        <button className="px-3 py-1 bg-purple-600 text-white rounded">1</button>
-                        <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">2</button>
-                        <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">3</button>
-                        <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
+
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                            <button
+                                key={page}
+                                className={`px-3 py-1 rounded ${currentPage === page ? 'bg-purple-600 text-white' : 'border border-gray-300 hover:bg-gray-50'}`}
+                                onClick={() => handlePageChange(page)}
+                            >
+                                {page}
+                            </button>
+                        ))}
+
+                        <button
+                            className={`px-3 py-1 border border-gray-300 rounded ${currentPage === totalPages || totalPages === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                        >
                             <i className="fas fa-chevron-right"></i>
                         </button>
                     </div>

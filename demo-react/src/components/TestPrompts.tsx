@@ -11,7 +11,13 @@ function TestPrompts() {
     const [showFullPrompt, setShowFullPrompt] = useState(false);
 
     // State for Patient Selection
-    const [searchDate, setSearchDate] = useState(new Date().toISOString().split('T')[0]);
+    const [searchDate, setSearchDate] = useState(() => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    });
     const [filteredPatients, setFilteredPatients] = useState<typeof samplePatients>([]);
     const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
