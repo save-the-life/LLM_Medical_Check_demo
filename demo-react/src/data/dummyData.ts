@@ -34,8 +34,35 @@ export interface PatientTestResults {
 const convertJsonToTestResults = (jsonData: any): TestResults => {
   const results: TestResults = {};
 
+  const groupMapping: { [key: string]: string } = {
+    "신체계측": "basic",
+    "혈압": "blood_pressure",
+    "소변검사": "urine",
+    "혈액검사": "blood",
+    "당뇨검사": "glucose",
+    "심혈관 기능검사": "cardio",
+    "간 및 신장 기능검사": "blood_chemistry",
+    "요산 및 류마티스 검사": "rheuma",
+    "갑상선 검사": "thyroid",
+    "특수혈액검사(종양표지자)": "tumor",
+    "골대사검사": "bone",
+    "대변검사": "stool",
+    "간염검사": "hepatitis",
+    "고지혈검사": "lipid",
+    "안과검사": "eye",
+    "청력검사": "hearing",
+    "폐기능검사": "lung_function",
+    "심전도": "ecg",
+    "흉부촬영": "xray",
+    "초음파검사": "ultrasound",
+    "소화기검사": "endoscopy",
+    "CT검사": "ct",
+    "기타": "other"
+  };
+
   jsonData.groups.forEach((group: any) => {
-    const categoryName = group['그룹명'];
+    const originalCategoryName = group['그룹명'];
+    const categoryName = groupMapping[originalCategoryName] || originalCategoryName;
 
     // Handle simple results (numeric/text values)
     if (group.simple_results && group.simple_results.length > 0) {
@@ -223,22 +250,28 @@ export const samplePatients: Patient[] = [
 
 export const testTypes = [
   { id: 'basic', name: '신체계측', icon: 'fa-ruler-vertical' },
+  { id: 'blood_pressure', name: '혈압', icon: 'fa-heart-pulse' },
   { id: 'blood', name: '혈액검사', icon: 'fa-vial' },
   { id: 'urine', name: '소변검사', icon: 'fa-flask' },
-  { id: 'liver', name: '간기능', icon: 'fa-procedures' }, // Added
-  { id: 'lipid', name: '고지혈', icon: 'fa-burger' }, // Added
-  { id: 'kidney', name: '신장기능', icon: 'fa-filter' }, // Added
-  { id: 'glucose', name: '당뇨', icon: 'fa-candy-cane' }, // Added
-  { id: 'thyroid', name: '갑상선', icon: 'fa-butterfly' }, // Added
-  { id: 'tumor', name: '종양표지자', icon: 'fa-disease' }, // Added
+  { id: 'blood_chemistry', name: '간/신장 기능', icon: 'fa-tablets' },
+  { id: 'glucose', name: '당뇨', icon: 'fa-candy-cane' },
+  { id: 'lipid', name: '고지혈', icon: 'fa-burger' },
+  { id: 'thyroid', name: '갑상선', icon: 'fa-butterfly' },
+  { id: 'tumor', name: '종양표지자', icon: 'fa-disease' },
+  { id: 'hepatitis', name: '간염', icon: 'fa-virus' },
+  { id: 'cardio', name: '심혈관', icon: 'fa-heart' },
+  { id: 'rheuma', name: '류마티스/요산', icon: 'fa-bone' },
+  { id: 'bone', name: '골대사', icon: 'fa-bone' },
+  { id: 'stool', name: '대변', icon: 'fa-poop' },
   { id: 'xray', name: '흉부촬영', icon: 'fa-x-ray' },
   { id: 'ultrasound', name: '초음파검사', icon: 'fa-wave-square' },
   { id: 'endoscopy', name: '내시경검사', icon: 'fa-microscope' },
+  { id: 'ct', name: 'CT검사', icon: 'fa-ring' },
   { id: 'ecg', name: '심전도', icon: 'fa-heartbeat' },
+  { id: 'lung_function', name: '폐기능', icon: 'fa-lungs' },
   { id: 'eye', name: '안과검사', icon: 'fa-eye' },
   { id: 'hearing', name: '청력검사', icon: 'fa-ear-listen' },
-  { id: 'mammography', name: '유방촬영', icon: 'fa-user-nurse' },
-  { id: 'ct', name: 'CT검사', icon: 'fa-ring' } // Added
+  { id: 'other', name: '기타', icon: 'fa-ellipsis-h' }
 ];
 
 export const samplePrompts: { [key: string]: string } = {
@@ -303,16 +336,14 @@ export const sampleTestResults: PatientTestResults = {
       { name: 'LDL 콜레스테롤', unit: 'mg/dL', reference: '<130', value: '68', status: 'normal' },
       { name: '중성지방(TG)', unit: 'mg/dL', reference: '<150', value: '111', status: 'normal' }
     ],
-    liver: [
+    blood_chemistry: [
       { name: 'AST(SGOT)', unit: 'U/L', reference: 'F<32', value: '28', status: 'normal' },
       { name: 'ALT(SGPT)', unit: 'U/L', reference: 'F<33', value: '34', status: 'high' },
       { name: 'GGT(γ-GTP)', unit: 'U/L', reference: '10~71', value: '22', status: 'normal' },
       { name: '총빌리루빈', unit: 'mg/dL', reference: '<1.2', value: '1.1', status: 'normal' },
       { name: 'ALP', unit: 'U/L', reference: '35-104', value: '66', status: 'normal' },
       { name: '총단백', unit: 'g/dl', reference: '6.6~8.7', value: '7.3', status: 'normal' },
-      { name: '알부민', unit: 'g/dl', reference: '3.5~5.2', value: '5.0', status: 'normal' }
-    ],
-    kidney: [
+      { name: '알부민', unit: 'g/dl', reference: '3.5~5.2', value: '5.0', status: 'normal' },
       { name: 'BUN(요소질소)', unit: 'mg/dL', reference: '6~20', value: '21', status: 'high' },
       { name: 'Creatinine', unit: 'mg/dL', reference: '0.70~1.20', value: '0.90', status: 'normal' },
       { name: 'eGFR', unit: 'mL/min/1.73m²', reference: '>60', value: '98.39', status: 'normal' }
