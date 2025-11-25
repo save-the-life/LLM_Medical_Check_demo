@@ -12,7 +12,7 @@ function TestPrompts() {
 
     // State for Patient Selection
     const [searchDate, setSearchDate] = useState('2025-05-02');
-    const [filteredPatients, setFilteredPatients] = useState(samplePatients);
+    const [filteredPatients, setFilteredPatients] = useState<typeof samplePatients>([]);
     const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
 
     // State for Analysis

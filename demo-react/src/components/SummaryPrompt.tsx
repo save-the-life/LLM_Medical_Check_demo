@@ -10,9 +10,14 @@ function SummaryPrompt() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [summaryResult, setSummaryResult] = useState('');
     const [showFullPrompt, setShowFullPrompt] = useState(false);
+    const [filteredPatients, setFilteredPatients] = useState<typeof samplePatients>([]);
 
     // Filter patients by date
-    const filteredPatients = samplePatients.filter(p => p.date === selectedDate);
+    const handleSearch = () => {
+        const filtered = samplePatients.filter(p => p.date === selectedDate);
+        setFilteredPatients(filtered);
+        setSelectedPatientId(null);
+    };
 
     const selectedPatient = samplePatients.find(p => p.id === selectedPatientId);
 
@@ -206,6 +211,12 @@ function SummaryPrompt() {
                             value={selectedDate}
                             onChange={(e) => setSelectedDate(e.target.value)}
                         />
+                        <button
+                            onClick={handleSearch}
+                            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition"
+                        >
+                            <i className="fas fa-search mr-2"></i>조회
+                        </button>
                     </div>
                 </div>
 
