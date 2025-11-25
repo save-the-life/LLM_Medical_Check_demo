@@ -14,6 +14,7 @@ function TestPrompts() {
     const [searchDate, setSearchDate] = useState('2025-05-02');
     const [filteredPatients, setFilteredPatients] = useState<typeof samplePatients>([]);
     const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+    const [hasSearched, setHasSearched] = useState(false);
 
     // State for Analysis
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -67,11 +68,33 @@ function TestPrompts() {
         }
     }, [selectedPatientId, selectedTestId, selectedPatient, selectedTestName]);
 
-    const handleSearchPatients = () => {
-        const filtered = samplePatients.filter(p => p.date === searchDate);
+    // Filter patients based on date and selected test availability
+    const filterPatients = () => {
+        let filtered = samplePatients.filter(p => p.date === searchDate);
+
+        // If a test is selected, only show patients who have results for that test
+        if (selectedTestId) {
+            filtered = filtered.filter(p => {
+                const results = sampleTestResults[p.id]?.[selectedTestId];
+                return results && (typeof results === 'string' || results.length > 0);
+            });
+        }
+
         setFilteredPatients(filtered);
+    };
+
+    const handleSearchPatients = () => {
+        setHasSearched(true);
+        filterPatients();
         setSelectedPatientId(null); // Reset selection
     };
+
+    // Re-filter when test changes if we have already searched
+    useEffect(() => {
+        if (hasSearched) {
+            filterPatients();
+        }
+    }, [selectedTestId]);
 
     const handleAnalyze = () => {
         if (!selectedPatientId || !selectedTestId) {

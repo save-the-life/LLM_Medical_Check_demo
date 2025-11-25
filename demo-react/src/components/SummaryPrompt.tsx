@@ -50,9 +50,16 @@ function SummaryPrompt() {
         }
     };
 
-    // Filter patients by date
+    // Filter patients by date and existence of results
     const handleSearch = () => {
-        const filtered = samplePatients.filter(p => p.date === selectedDate);
+        const filtered = samplePatients.filter(p => {
+            // Check date match
+            if (p.date !== selectedDate) return false;
+
+            // Check if patient has any results
+            const results = sampleTestResults[p.id];
+            return results && Object.keys(results).length > 0;
+        });
         setFilteredPatients(filtered);
         setSelectedPatientId(null);
     };
