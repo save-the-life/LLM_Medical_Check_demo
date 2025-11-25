@@ -11,6 +11,44 @@ function SummaryPrompt() {
     const [summaryResult, setSummaryResult] = useState('');
     const [showFullPrompt, setShowFullPrompt] = useState(false);
     const [filteredPatients, setFilteredPatients] = useState<typeof samplePatients>([]);
+    const [savedPrompts, setSavedPrompts] = useState<{ name: string; content: string; timestamp: number }[]>([]);
+
+    // Load saved prompts from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('saved_summary_prompts');
+        if (saved) {
+            try {
+                setSavedPrompts(JSON.parse(saved));
+            } catch (e) {
+                console.error('Failed to parse saved prompts', e);
+            }
+        }
+    }, []);
+
+    const handleSavePrompt = () => {
+        const name = window.prompt('프롬프트 저장 이름을 입력하세요:');
+        if (!name) return;
+
+        const newPrompt = {
+            name,
+            content: prompt,
+            timestamp: Date.now()
+        };
+
+        const updatedPrompts = [...savedPrompts, newPrompt];
+        setSavedPrompts(updatedPrompts);
+        localStorage.setItem('saved_summary_prompts', JSON.stringify(updatedPrompts));
+        alert('프롬프트가 저장되었습니다.');
+    };
+
+    const handleLoadPrompt = (name: string) => {
+        const found = savedPrompts.find(p => p.name === name);
+        if (found) {
+            if (window.confirm(`'${name}' 프롬프트를 불러오시겠습니까? 현재 작성 중인 내용은 사라집니다.`)) {
+                setPrompt(found.content);
+            }
+        }
+    };
 
     // Filter patients by date
     const handleSearch = () => {
@@ -185,16 +223,40 @@ function SummaryPrompt() {
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
                     ></textarea>
-                    <div className="flex justify-end gap-2 mt-3">
-                        <button
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold transition text-sm"
-                            onClick={() => setPrompt(masterPrompt)}
-                        >
-                            <i className="fas fa-undo mr-1"></i>초기화
-                        </button>
-                        <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition">
-                            <i className="fas fa-save mr-1"></i>저장
-                        </button>
+                    <div className="flex justify-between items-center mt-3">
+                        <div className="flex-1 mr-2">
+                            <select
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                                onChange={(e) => {
+                                    if (e.target.value) {
+                                        handleLoadPrompt(e.target.value);
+                                        e.target.value = ''; // Reset selection
+                                    }
+                                }}
+                                defaultValue=""
+                            >
+                                <option value="" disabled>💾 저장된 프롬프트 불러오기</option>
+                                {savedPrompts.map((p, idx) => (
+                                    <option key={idx} value={p.name}>
+                                        {p.name} ({new Date(p.timestamp).toLocaleDateString()})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold transition text-sm"
+                                onClick={() => setPrompt(masterPrompt)}
+                            >
+                                <i className="fas fa-undo mr-1"></i>초기화
+                            </button>
+                            <button
+                                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition"
+                                onClick={handleSavePrompt}
+                            >
+                                <i className="fas fa-save mr-1"></i>저장
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
