@@ -3,3 +3,7 @@ CLAUDE.md
 20251107-01869517/
 .DS_Store
 건진센터 처방코드(의료정보팀AI판독용).xlsx
+
+# Node modules and build artifacts
+admin-hospital/node_modules/
+admin-hospital/dist/
